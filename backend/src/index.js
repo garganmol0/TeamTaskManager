@@ -15,9 +15,11 @@ app.use('/api/projects', projectRoutes)
 app.use('/api/tasks', taskRoutes)
 app.use('/api/activity', activityRoutes)
 app.use(errorHandler)
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 8000
 mongoose.connect(process.env.MONGO_URI).then(()=>{
-  app.listen(PORT)
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`)
+  })
 }).catch(err=>{
   console.error(err)
 })

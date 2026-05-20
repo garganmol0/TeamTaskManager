@@ -1,5 +1,22 @@
 import React, { createContext, useState, useEffect } from 'react'
 import axios from 'axios'
+
+axios.defaults.baseURL = import.meta.env.VITE_API_URL
+
+// Request interceptor to add JWT token to all requests
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
 export const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
@@ -11,13 +28,13 @@ export const AuthProvider = ({ children }) => {
     setLoading(false)
   }, [])
   const login = async (email, password) => {
-    const res = await axios.post(import.meta.env.VITE_API_URL + '/api/auth/login', { email, password })
+    const res = await axios.post('/api/auth/login', { email, password })
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(res.data.user))
     setUser(res.data.user)
   }
   const signup = async (name, email, password) => {
-    const res = await axios.post(import.meta.env.VITE_API_URL + '/api/auth/signup', { name, email, password })
+    const res = await axios.post('/api/auth/signup', { name, email, password })
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(res.data.user))
     setUser(res.data.user)

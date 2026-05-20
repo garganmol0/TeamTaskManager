@@ -43,7 +43,9 @@ router.delete('/:id', protect, async (req, res, next) => {
     const project = await Project.findById(req.params.id)
     if (!project) return res.status(404).json({ message: 'Not found' })
     if (!project.owner.equals(req.user._id) && req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' })
-    await project.remove()
+    const Task = require('../models/Task')
+    await Task.deleteMany({ project: project._id })
+    await Project.deleteOne({ _id: project._id })
     await Activity.create({ type: 'project', message: `Project deleted: ${project.title}`, user: req.user._id })
     res.json({ message: 'Deleted' })
   } catch (err) {
@@ -59,7 +61,9 @@ router.post('/:id/invite', protect, body('email').isEmail(), async (req, res, ne
     if (!project.owner.equals(req.user._id) && req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' })
     const user = await User.findOne({ email: req.body.email })
     if (!user) return res.status(404).json({ message: 'User not found' })
-    if (!project.members.includes(user._id)) project.members.push(user._id)
+    if (!project.members.some(m => m.toString() === user._id.toString())) {
+      project.members.push(user._id)
+    }
     await project.save()
     await Activity.create({ type: 'project', message: `Member added: ${user.email} to ${project.title}`, user: req.user._id, project: project._id })
     res.json(project)
